@@ -72,6 +72,15 @@ void Thread::SetCurrentThreadName(const std::string& name) {
   }
 #if OS_MACOSX
   pthread_setname_np(name.c_str());
+
+  struct sched_param sp;
+  memset(&sp, 0, sizeof(struct sched_param));
+  sp.sched_priority = sched_get_priority_max(SCHED_RR);
+  FML_DLOG(INFO) << "setting thread priority to " << sp.sched_priority;
+  if (pthread_setschedparam(pthread_self(), SCHED_RR, &sp)  == -1) {
+        FML_DLOG(INFO) << "Failed to change priority.";
+  }
+
 #elif OS_LINUX || OS_ANDROID
   pthread_setname_np(pthread_self(), name.c_str());
 #elif OS_WIN
